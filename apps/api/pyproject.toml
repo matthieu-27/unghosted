@@ -1,20 +1,43 @@
 [project]
 name = "unghosted-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "Unghosted API and worker: Litestar service sharing the unghosted package."
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "litestar>=2.16.0",
+    "uvicorn>=0.53.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/unghosted"]
+
+[tool.uv]
+package = true
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.0",
     "mypy>=2.3.1",
+    "pytest>=9.1.1",
     "ruff>=0.16.8",
 ]
 
 [tool.ruff]
 target-version = "py314"
+src = ["src", "tests"]
 
 [tool.mypy]
 strict = true
 python_version = "3.14"
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+# Zero-warning policy: any warning fails the run.
+filterwarnings = ["error"]
