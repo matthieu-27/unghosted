@@ -1,0 +1,27 @@
+@startuml usecase-track-application
+' Use case: user tracks a new application (brief section 2.6).
+' One use case per actor goal. Fetching, source detection and field
+' extraction are internal steps of "Track a new application",
+' not use cases of their own.
+left to right direction
+skinparam packageStyle rectangle
+
+actor "User" as user
+actor "Reply Worker" as worker
+
+rectangle "Unghosted" {
+  (Track a new application) as track
+  (Review the pre-filled form) as review
+  (Link or create a contact) as contact
+  (Write the first contact email) as first
+  (Record the reply on the row) as reply
+}
+
+user --> track
+
+track ..> review : <<include>>
+review ..> contact : <<extend>>
+review ..> first : <<extend>>
+
+worker --> reply
+@enduml

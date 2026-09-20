@@ -1,0 +1,26 @@
+@startuml usecase-create-project
+' Use case: user creates a project from a template.
+' Source: product brief, section 2.3 "New project" modal.
+left to right direction
+skinparam packageStyle rectangle
+
+actor "User" as user
+
+rectangle "Unghosted" {
+  (Create project) as create
+  (Choose template) as template
+  (Enter name and description) as name
+  (Fill template settings) as settings
+}
+
+user --> create
+
+create ..> template : <<include>>
+create ..> name : <<include>>
+create ..> settings : <<extend>>
+
+note right of template
+  Job search, Rental search,
+  Property purchase, or Blank
+end note
+@enduml
