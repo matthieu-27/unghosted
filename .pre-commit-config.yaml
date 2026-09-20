@@ -31,13 +31,17 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  # Python type check — strict is the project baseline (brief 9.1)
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.3.1
+  # Python type check — strict is the project baseline (brief 9.1).
+  # Local hook: mypy resolves the src/ layout and config from apps/api,
+  # which a root-cwd mirrors-mypy invocation cannot do.
+  - repo: local
     hooks:
-      - id: mypy
-        args: [--strict]
-        files: ^apps/api/
+      - id: api-typecheck
+        name: api typecheck (mypy --strict)
+        entry: bash -c 'cd apps/api && uv run mypy src tests'
+        language: system
+        pass_filenames: false
+        files: ^apps/api/.*\.py$
 
   # Web: tsc strict + Biome (lint, format, imports) via the app's own scripts
   - repo: local
