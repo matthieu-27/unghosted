@@ -16,6 +16,9 @@ repos:
       - id: trailing-whitespace
         exclude: ^img/
       - id: check-added-large-files
+        # Design source binaries (Penpot exports) are intentionally stored
+        # and exceed the default 500 KB cap.
+        exclude: ^docs/files/
 
   # Secret scanning
   - repo: https://github.com/gitleaks/gitleaks
