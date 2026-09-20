@@ -1,0 +1,58 @@
+# Pre-commit gate — brief section 9.1.
+# Install: uv tool install pre-commit && pre-commit install
+# Run all: pre-commit run --all-files
+#
+# Web checks run Biome (root biome.json) via apps/web package.json scripts.
+repos:
+  # File hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+      - id: end-of-file-fixer
+        exclude: ^img/
+      - id: trailing-whitespace
+        exclude: ^img/
+      - id: check-added-large-files
+
+  # Secret scanning
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # Python lint + format (config in apps/api/pyproject.toml [tool.ruff])
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Python type check — strict is the project baseline (brief 9.1)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.3.1
+    hooks:
+      - id: mypy
+        args: [--strict]
+        files: ^apps/api/
+
+  # Web: tsc strict + Biome (lint, format, imports) via the app's own scripts
+  - repo: local
+    hooks:
+      - id: web-typecheck
+        name: web typecheck (tsc --noEmit)
+        entry: bash -c 'cd apps/web && bun run typecheck'
+        language: system
+        pass_filenames: false
+        files: ^apps/web/
+        types_or: [ts, tsx]
+      - id: web-check
+        name: web check (biome)
+        entry: bash -c 'cd apps/web && bun run check'
+        language: system
+        pass_filenames: false
+        files: ^apps/web/
+        types_or: [ts, tsx, javascript, jsx, css, json]

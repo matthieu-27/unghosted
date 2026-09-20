@@ -1,0 +1,40 @@
+# Environment and secrets — never commit
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# Node / Bun
+node_modules/
+.vite/
+coverage/
+
+# TanStack Start
+.tanstack/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Logs
+*.log
