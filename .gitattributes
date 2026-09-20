@@ -1,0 +1,16 @@
+# Normalize text files to LF in the repo and on checkout, so Windows
+# autocrlf cannot rewrite working files behind Biome's back.
+* text=auto eol=lf
+
+# Windows scripts keep CRLF
+*.bat text eol=crlf
+
+# Binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.penpot binary

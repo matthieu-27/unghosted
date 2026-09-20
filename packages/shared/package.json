@@ -1,0 +1,6 @@
+{
+  "name": "@unghosted/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared data: template definitions, source-detection mappings, JSON Schemas for API contracts. Plain data files consumed by both apps/web and apps/api; no build step."
+}

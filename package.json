@@ -1,0 +1,15 @@
+{
+  "name": "unghosted",
+  "private": true,
+  "packageManager": "bun@1.3.12",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "setup": "bun install && bun run setup:api && docker compose up -d",
+    "setup:api": "cd apps/api && uv sync --all-groups",
+    "dev": "bash -c 'bun run dev:web & bun run dev:api'",
+    "dev:web": "cd apps/web && bun run dev",
+    "dev:api": "cd apps/api && uv run litestar --app unghosted.app:create_app run --reload --port 8000",
+    "check:web": "cd apps/web && bun run check && bun run typecheck && bun run test && bun run build",
+    "check:api": "cd apps/api && uv run ruff check . && uv run ruff format --check . && uv run mypy src tests && uv run pytest"
+  }
+}
