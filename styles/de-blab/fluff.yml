@@ -1,0 +1,21 @@
+# Filler words that add nothing.
+extends: existence
+message: "De-blab: '%s' adds nothing — cut it."
+level: warning
+ignorecase: true
+tokens:
+  - basically
+  - actually
+  - simply
+  - really
+  - very
+  - quite
+  - literally
+  - essentially
+  - obviously
+  - needless to say
+  - it should be noted that
+  - it is important to note that
+  - as a matter of fact
+  - for all intents and purposes
+  - in the process of

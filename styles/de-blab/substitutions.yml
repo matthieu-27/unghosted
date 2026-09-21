@@ -1,0 +1,19 @@
+# Long-winded phrasing → the short form.
+extends: substitution
+message: "De-blab: use '%s' instead of '%s'."
+level: warning
+ignorecase: true
+swap:
+  "in order to": "to"
+  "due to the fact that": "because"
+  "in the event that": "if"
+  "at this point in time": "now"
+  "a number of": "several"
+  "a majority of": "most"
+  "prior to": "before"
+  "subsequent to": "after"
+  "utilize": "use"
+  "utilizing": "using"
+  "in the near future": "soon"
+  "for the purpose of": "for"
+  "with regard to": "about"

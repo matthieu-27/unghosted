@@ -58,3 +58,21 @@ jobs:
           cd apps/web
           bun install --frozen-lockfile
           bun audit
+
+  prose:
+    name: prose (vale)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Vale 3.22.0
+        run: |
+          curl -sL https://github.com/errata-ai/vale/releases/download/v3.22.0/vale_3.22.0_Linux_64-bit.tar.gz | tar xz vale
+          sudo install -m 0755 vale /usr/local/bin/vale
+      # vale only exits nonzero on error-level alerts; the project baseline
+      # is zero warnings, so also fail when the "✖" summary marker appears.
+      - name: Vale (fail on any alert)
+        run: |
+          out=$(vale . --glob='*.md' 2>&1); ec=$?
+          printf '%s\n' "$out"
+          [ "$ec" -ne 0 ] && exit "$ec"
+          if printf '%s' "$out" | grep -q '✖'; then exit 1; fi

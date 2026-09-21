@@ -63,3 +63,15 @@ repos:
         pass_filenames: false
         files: ^apps/web/
         types_or: [ts, tsx, javascript, jsx, css, json]
+
+  # Prose lint (config in .vale.ini, styles vendored in styles/).
+  # Local hook: vale only exits nonzero on error-level alerts, but the
+  # project baseline is zero warnings — so the wrapper also fails when the
+  # summary marker "✖" (findings present) appears in the output.
+  - repo: local
+    hooks:
+      - id: prose-check
+        name: prose check (vale)
+        entry: bash -c 'out=$(vale "$@"); ec=$?; printf "%s" "$out"; [ "$ec" -ne 0 ] && exit "$ec"; ! printf "%s" "$out" | grep -q "✖"' --
+        language: system
+        types: [markdown]
