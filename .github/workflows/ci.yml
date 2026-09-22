@@ -29,6 +29,36 @@ jobs:
     defaults:
       run:
         working-directory: apps/api
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: unghosted
+          POSTGRES_PASSWORD: unghosted
+          POSTGRES_DB: unghosted
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mongo:
+        image: mongo:8
+        env:
+          MONGO_INITDB_ROOT_USERNAME: unghosted
+          MONGO_INITDB_ROOT_PASSWORD: unghosted
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd mongosh --eval 'db.runCommand("ping")' --quiet
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      UNGHOSTED_DATABASE_URL: postgresql+asyncpg://unghosted:unghosted@localhost:5432/unghosted
+      UNGHOSTED_MONGO_URL: mongodb://unghosted:unghosted@localhost:27017
+      UNGHOSTED_SEED_USER_ID: 00000000-0000-4000-8000-000000000001
     steps:
       - uses: actions/checkout@v4
       # setup-uv publishes immutable releases since v8: pin the exact version.
