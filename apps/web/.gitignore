@@ -3,7 +3,10 @@ node_modules
 dist
 dist-ssr
 *.local
-.env*
+# Real env files stay out; the tracked example lives in apps/web/.env.example
+.env
+.env.local
+.env.*.local
 .tanstack
 .wrangler
 .output

@@ -1,0 +1,9 @@
+# House rule (owner's personal style): no semicolons in prose.
+# Instead: end the sentence with "." or move critical details into ().
+# raw regex match: a plain ";" token is dropped by the tokenizer.
+extends: existence
+message: "No semicolons. End the sentence with '.' or add the detail in parentheses."
+level: error
+ignorecase: false
+raw:
+  - ";"
