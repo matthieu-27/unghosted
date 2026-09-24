@@ -1,0 +1,51 @@
+@startuml deployment-production
+' Unghosted — production on AWS (phase 11). Exact services confirmed with owner before build.
+title Unghosted — production deployment (AWS, phase 11)
+
+actor "User" as user
+cloud "GitHub" as gh {
+  [Actions: CD pipeline incl. S3 smoke test] as cd
+}
+
+cloud "AWS" as aws {
+  [Route 53 / DNS + TLS] as dns
+  [Load balancer] as lb
+  node "Compute — choice at phase 11:\nEC2 + Compose (same images as staging)\nor ECS/Fargate services" as compute {
+    [web] as web
+    [api] as api
+    [worker] as worker
+  }
+  database "RDS PostgreSQL\n(least-privilege roles: auth / api / worker)" as rds
+  database "MongoDB — choice at phase 11:\nAtlas | self-hosted on compute | DocumentDB (compat gaps)" as mongo
+  storage "S3 bucket unghosted-documents\nprivate, per-user prefixes" as s3
+  [KMS] as kms
+  [Secrets Manager] as secrets
+}
+
+user --> dns
+dns --> lb
+lb --> web
+lb --> api
+web ..> rds : Better Auth
+api --> rds
+api --> mongo
+api --> s3 : storage gateway (S3 impl)
+api ..> kms : data-key wrap/unwrap
+worker --> rds
+worker --> mongo
+worker --> s3
+compute ..> secrets : env at boot
+cd --> aws : deploy
+
+note bottom of mongo
+  Same images run in staging and production.
+  Everything portable until phase 11: storage behind
+  interface, standard PostgreSQL + MongoDB protocols,
+  keys and endpoints from configuration.
+end note
+
+note right of s3
+  Smoke test against the real bucket runs only
+  in this pipeline (moto everywhere else).
+end note
+@enduml
