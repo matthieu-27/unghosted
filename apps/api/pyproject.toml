@@ -5,7 +5,20 @@ description = "Unghosted API and worker: Litestar service sharing the unghosted 
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "litestar>=2.16.0",
+    "aiosmtplib>=4.0.0",
+    "alembic>=1.20.0",
+    "asyncpg>=0.31.0",
+    "cryptography>=50.0.1",
+    "httpx>=0.28.1",
+    "litestar>=2.24.0",
+    "playwright>=1.54.0",
+    "pydantic>=2.13.5",
+    "pydantic-settings>=2.15.0",
+    "pyjwt[crypto]>=2.15.0",
+    "pymongo>=4.18.1",
+    "pypdf>=6.19.0",
+    "pytest-cov>=7.1.0",
+    "sqlalchemy[asyncio]>=2.0.54",
     "uvicorn>=0.53.0",
 ]
 
@@ -21,9 +34,12 @@ package = true
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.0",
+    "aioboto3>=15.5.0",
+    "moto[server]>=5.2.3",
     "mypy>=2.3.1",
     "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.0.0",
     "ruff>=0.16.8",
 ]
 
@@ -36,8 +52,30 @@ strict = true
 python_version = "3.14"
 mypy_path = "src"
 
+# BaseSettings reads required fields from the environment at runtime; its
+# __init__ takes **values, but dataclass_transform synthesis still marks the
+# zero-arg call as missing arguments. The pydantic mypy plugin that used to
+# handle this was dropped in pydantic 2.13.
+[[tool.mypy.overrides]]
+module = "unghosted.config"
+disable_error_code = ["call-arg"]
+
+# Storage and test-double libraries ship without type stubs.
+[[tool.mypy.overrides]]
+module = ["aioboto3", "boto3", "moto.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+asyncio_mode = "auto"
+addopts = "--cov=unghosted --cov-report=term-missing --cov-fail-under=80"
+markers = [
+    "integration: needs the compose databases (docker compose up -d)",
+]
 # Zero-warning policy: any warning fails the run.
 filterwarnings = ["error"]
+
+[tool.coverage.run]
+# The worker entrypoint is a placeholder until phase 6.
+omit = ["src/unghosted/worker/__main__.py"]
