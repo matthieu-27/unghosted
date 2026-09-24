@@ -1,0 +1,53 @@
+@startuml mongo-model
+' Unghosted — MongoDB document model. Database name: unghosted
+' Minimal-Mongo decision (2026-09-21): MongoDB holds the tracker only.
+' Templates live in packages/shared as static JSON. Everything else is PostgreSQL.
+
+title Unghosted — MongoDB document model (tracker only)
+
+skinparam class {
+  BackgroundColor<<collection>> WhiteSmoke
+}
+
+class tracker_definitions <<collection>> {
+  _id : uuid = project_id
+  template_key : string
+  template_version : int
+  revision : int
+  columns : [ { key, type, label, options?,
+                computed?, width?, system? } ]
+  conditional_rules : [ { key, when, effect } ]
+  settings : { template-specific, validated
+               against template settings schema }
+}
+
+class tracker_rows <<collection>> {
+  _id : uuid
+  project_id : uuid
+  order_key : string (fractional indexing)
+  revision : int
+  cells : { column_key -> typed value }
+  styles : { column_key -> sparse style,
+             only cells differing from defaults }
+}
+
+tracker_definitions ||--|| tracker_rows : "same project_id, one revision domain"
+
+note bottom of tracker_definitions
+  Instantiated from the template JSON at project
+  creation, then user-mutated (add column, edit
+  options, change settings). $jsonSchema
+  validators enforce document shape.
+end note
+
+note bottom of tracker_rows
+  Indexes:
+    (project_id, order_key) — row order + virtualization window
+    (project_id, revision) — conflict rebase
+  Validation: keys reject leading "$" and any "."
+  Cell values validated by schemas built from
+  tracker_definitions.columns
+  Updates: find_one_and_update with revision filter
+  (atomic, guards definition + row edits together)
+end note
+@enduml

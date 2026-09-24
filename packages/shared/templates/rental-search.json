@@ -1,0 +1,93 @@
+{
+  "$schema": "../schemas/template.schema.json",
+  "key": "rental-search",
+  "version": 1,
+  "label": "Rental search",
+  "description": "Track apartment listings, visits and application files.",
+  "settings": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "max_budget_rent": { "type": "number" },
+        "target_area": { "type": "string" },
+        "target_move_in_date": { "type": "string", "format": "date" }
+      },
+      "required": []
+    },
+    "defaults": {}
+  },
+  "columns": [
+    { "key": "date_added", "type": "date", "label": "Date added" },
+    { "key": "listing", "type": "url", "label": "Listing" },
+    {
+      "key": "source",
+      "type": "select",
+      "label": "Source",
+      "options": [
+        { "key": "seloger", "label": "SeLoger" },
+        { "key": "leboncoin", "label": "Leboncoin" },
+        { "key": "pap", "label": "PAP" },
+        { "key": "bienici", "label": "Bien'ici" },
+        { "key": "logic_immo", "label": "Logic-Immo" },
+        { "key": "loc_service", "label": "LocService" },
+        { "key": "other", "label": "Other" }
+      ]
+    },
+    { "key": "property", "type": "text", "label": "Property" },
+    { "key": "address", "type": "text", "label": "Address" },
+    { "key": "rent_incl_charges", "type": "currency", "label": "Rent incl. charges", "currency": "EUR" },
+    { "key": "contacted", "type": "checkbox", "label": "Contacted" },
+    { "key": "application_sent", "type": "checkbox", "label": "Application sent" },
+    {
+      "key": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        { "key": "spotted", "label": "Spotted", "color": null },
+        { "key": "awaiting_reply", "label": "Awaiting reply", "color": null },
+        { "key": "visit_scheduled", "label": "Visit scheduled", "color": "blue" },
+        { "key": "visited", "label": "Visited", "color": "blue" },
+        { "key": "accepted", "label": "Accepted", "color": "green" },
+        { "key": "rejected", "label": "Rejected", "color": "red" },
+        { "key": "listing_removed", "label": "Listing removed", "color": "grey" },
+        { "key": "dropped", "label": "Dropped", "color": "grey" }
+      ]
+    },
+    { "key": "follow_up_date", "type": "date", "label": "Follow-up date" },
+    { "key": "contact", "type": "contact-link", "label": "Contact" },
+    { "key": "response_date", "type": "date", "label": "Response date", "system": true },
+    {
+      "key": "reply_type",
+      "type": "select",
+      "label": "Reply type",
+      "system": true,
+      "options": [
+        { "key": "auto", "label": "Auto-reply" },
+        { "key": "human", "label": "Human" }
+      ]
+    },
+    { "key": "notes", "type": "long-text", "label": "Notes" }
+  ],
+  "conditional_rules": [],
+  "statistics": [],
+  "document_types": [
+    { "key": "housing_file", "label": "Housing file", "model_eligible": true },
+    { "key": "employment_contract", "label": "Employment contract", "model_eligible": false },
+    { "key": "payslip", "label": "Payslip", "model_eligible": false },
+    { "key": "tax_notice", "label": "Tax notice", "model_eligible": false },
+    { "key": "id_document", "label": "ID document", "model_eligible": false },
+    { "key": "guarantor_document", "label": "Guarantor document", "model_eligible": false },
+    { "key": "bank_details", "label": "Bank details", "model_eligible": false },
+    { "key": "other", "label": "Other", "model_eligible": false }
+  ],
+  "mail_templates": [
+    { "key": "visit-request", "kind": "first_contact" },
+    { "key": "follow-up-file", "kind": "follow_up" }
+  ],
+  "allowed_page_kinds": ["housing_listing", "agency", "other"],
+  "analysis_hints": {
+    "housing_listing": ["property", "address", "rent_incl_charges", "listing", "source"],
+    "agency": ["company", "location"],
+    "other": ["company"]
+  }
+}
