@@ -23,6 +23,10 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
+.coverage
+
+# Local document storage (unghosted API)
+apps/api/var/
 
 # Node / Bun
 node_modules/
