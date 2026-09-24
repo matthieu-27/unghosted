@@ -1,19 +1,38 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
+/** Public landing: the door to sign in or sign up. */
 
-export const Route = createFileRoute('/')({ component: App });
+import { createFileRoute, Link, redirect } from '@tanstack/react-router';
 
-function App() {
+import { getSession } from '@/lib/auth-server';
+
+export const Route = createFileRoute('/')({
+  beforeLoad: async () => {
+    const user = await getSession();
+    if (user) {
+      throw redirect({ to: '/projects' });
+    }
+  },
+  component: LandingPage,
+});
+
+function LandingPage() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
+    <main className="mx-auto w-full max-w-md p-6 pt-24">
+      <h1 className="text-2xl font-semibold">Unghosted</h1>
+      <p className="mt-2 text-muted-foreground">
+        Track every application, know where each one stands, and write the next
+        message without leaving the page.
+      </p>
+      <div className="mt-8 flex gap-3">
+        <Link
+          to="/signup"
+          className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+        >
+          Create an account
+        </Link>
+        <Link to="/login" className="rounded-md border px-4 py-2 text-sm">
+          Sign in
+        </Link>
       </div>
-    </div>
+    </main>
   );
 }

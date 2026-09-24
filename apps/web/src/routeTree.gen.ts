@@ -10,42 +10,134 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as AuthedProjectsIndexRouteImport } from './routes/_authed.projects.index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AuthedProjectsProjectIdDocumentsRouteImport } from './routes/_authed.projects.$projectId.documents'
+import { Route as AuthedProjectsProjectIdMailRouteImport } from './routes/_authed.projects.$projectId.mail'
+import { Route as AuthedProjectsProjectIdTrackerRouteImport } from './routes/_authed.projects.$projectId.tracker'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedProjectsIndexRoute = AuthedProjectsIndexRouteImport.update({
+  id: '/projects/',
+  path: '/projects/',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedProjectsProjectIdDocumentsRoute =
+  AuthedProjectsProjectIdDocumentsRouteImport.update({
+    id: '/projects/$projectId/documents',
+    path: '/projects/$projectId/documents',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const AuthedProjectsProjectIdMailRoute =
+  AuthedProjectsProjectIdMailRouteImport.update({
+    id: '/projects/$projectId/mail',
+    path: '/projects/$projectId/mail',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const AuthedProjectsProjectIdTrackerRoute =
+  AuthedProjectsProjectIdTrackerRouteImport.update({
+    id: '/projects/$projectId/tracker',
+    path: '/projects/$projectId/tracker',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/projects/': typeof AuthedProjectsIndexRoute
+  '/projects/$projectId/documents': typeof AuthedProjectsProjectIdDocumentsRoute
+  '/projects/$projectId/mail': typeof AuthedProjectsProjectIdMailRoute
+  '/projects/$projectId/tracker': typeof AuthedProjectsProjectIdTrackerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/projects': typeof AuthedProjectsIndexRoute
+  '/projects/$projectId/documents': typeof AuthedProjectsProjectIdDocumentsRoute
+  '/projects/$projectId/mail': typeof AuthedProjectsProjectIdMailRoute
+  '/projects/$projectId/tracker': typeof AuthedProjectsProjectIdTrackerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authed': typeof AuthedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_authed/projects/': typeof AuthedProjectsIndexRoute
+  '/_authed/projects/$projectId/documents': typeof AuthedProjectsProjectIdDocumentsRoute
+  '/_authed/projects/$projectId/mail': typeof AuthedProjectsProjectIdMailRoute
+  '/_authed/projects/$projectId/tracker': typeof AuthedProjectsProjectIdTrackerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/api/auth/$'
+    | '/projects/'
+    | '/projects/$projectId/documents'
+    | '/projects/$projectId/mail'
+    | '/projects/$projectId/tracker'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/auth/$'
-  id: '__root__' | '/' | '/api/auth/$'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/api/auth/$'
+    | '/projects'
+    | '/projects/$projectId/documents'
+    | '/projects/$projectId/mail'
+    | '/projects/$projectId/tracker'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authed'
+    | '/login'
+    | '/signup'
+    | '/api/auth/$'
+    | '/_authed/projects/'
+    | '/_authed/projects/$projectId/documents'
+    | '/_authed/projects/$projectId/mail'
+    | '/_authed/projects/$projectId/tracker'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -58,6 +150,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/projects/': {
+      id: '/_authed/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof AuthedProjectsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -65,11 +185,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/projects/$projectId/documents': {
+      id: '/_authed/projects/$projectId/documents'
+      path: '/projects/$projectId/documents'
+      fullPath: '/projects/$projectId/documents'
+      preLoaderRoute: typeof AuthedProjectsProjectIdDocumentsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/projects/$projectId/mail': {
+      id: '/_authed/projects/$projectId/mail'
+      path: '/projects/$projectId/mail'
+      fullPath: '/projects/$projectId/mail'
+      preLoaderRoute: typeof AuthedProjectsProjectIdMailRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/projects/$projectId/tracker': {
+      id: '/_authed/projects/$projectId/tracker'
+      path: '/projects/$projectId/tracker'
+      fullPath: '/projects/$projectId/tracker'
+      preLoaderRoute: typeof AuthedProjectsProjectIdTrackerRouteImport
+      parentRoute: typeof AuthedRoute
+    }
   }
 }
 
+interface AuthedRouteChildren {
+  AuthedProjectsIndexRoute: typeof AuthedProjectsIndexRoute
+  AuthedProjectsProjectIdDocumentsRoute: typeof AuthedProjectsProjectIdDocumentsRoute
+  AuthedProjectsProjectIdMailRoute: typeof AuthedProjectsProjectIdMailRoute
+  AuthedProjectsProjectIdTrackerRoute: typeof AuthedProjectsProjectIdTrackerRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedProjectsIndexRoute: AuthedProjectsIndexRoute,
+  AuthedProjectsProjectIdDocumentsRoute: AuthedProjectsProjectIdDocumentsRoute,
+  AuthedProjectsProjectIdMailRoute: AuthedProjectsProjectIdMailRoute,
+  AuthedProjectsProjectIdTrackerRoute: AuthedProjectsProjectIdTrackerRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthedRoute: AuthedRouteWithChildren,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
