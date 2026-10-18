@@ -1,0 +1,310 @@
+// Unghosted — MLD (logical model, PostgreSQL). Render at https://dbdiagram.io
+// Physical DDL comes from Alembic in phase 3. auth.* tables are Better Auth's own migrations.
+
+Project unghosted {
+  database_type: 'PostgreSQL'
+}
+
+Table projects {
+  id uuid [pk]
+  owner_user_id uuid [not null, note: 'auth.user.id — no cross-schema FK, checked in service layer']
+  name varchar [not null]
+  description text
+  template_key varchar [not null, note: 'apprenticeship-search | rental-search']
+  template_version integer [not null]
+  archived_at timestamptz
+  deleted_at timestamptz [note: 'soft delete; purge job hard-deletes']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (owner_user_id) [name: 'idx_projects_owner']
+    (owner_user_id, archived_at) [name: 'idx_projects_owner_archived']
+  }
+}
+
+Table contacts {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  name varchar [not null]
+  role varchar
+  organization varchar
+  email varchar
+  phone varchar
+  profile_url varchar
+  notes text
+  email_invalid boolean [default: false, note: 'flagged by bounce handling']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (project_id) [name: 'idx_contacts_project']
+    (project_id, email) [name: 'idx_contacts_project_email']
+  }
+}
+
+Table contact_row_links {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  contact_id uuid [not null, ref: > contacts.id]
+  row_id uuid [not null, note: 'tracker_rows._id in MongoDB']
+
+  indexes {
+    (contact_id, row_id) [unique, name: 'uq_contact_row']
+    (row_id) [name: 'idx_crl_row']
+  }
+}
+
+Table documents {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  type_key varchar [not null, note: 'cv | base_cover_letter | … (template-defined)']
+  model_eligible boolean [not null, note: 'snapshot of template flag at upload']
+  storage_key varchar [not null, note: 'users/{userId}/documents/{id}.bin']
+  encrypted_data_key bytea [not null]
+  key_algorithm_version varchar [not null, note: 'e.g. aes-256-gcm+v1']
+  size_bytes bigint [not null]
+  checksum_sha256 char [not null]
+  original_filename varchar [not null]
+  content_type_sniffed varchar [not null]
+  retention_until timestamptz
+  deleted_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (project_id) [name: 'idx_documents_project']
+  }
+}
+
+Table applicant_profiles {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  version integer [not null]
+  status varchar [not null, note: 'draft | approved | superseded']
+  headline varchar
+  seeking text
+  highlights jsonb [note: '[ {id, text, source} ] — ids cited by generated letters']
+  motivation text
+  style_notes jsonb [note: '{ tone, formality, phrases[] }']
+  availability varchar
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (project_id, version) [unique, name: 'uq_profile_project_version']
+  }
+}
+
+Table mailbox_connections {
+  id uuid [pk]
+  user_id uuid [not null, note: 'auth.user.id']
+  provider varchar [not null, note: 'gmail | outlook']
+  account_email varchar [not null]
+  granted_scopes text[] [not null]
+  encrypted_tokens bytea [not null, note: 'envelope-encrypted blob: access+refresh+expiry']
+  key_algorithm_version varchar [not null]
+  sync_cursor varchar [note: 'Gmail historyId / Graph deltaLink']
+  status varchar [not null, default: 'active', note: 'active | needs_reconnect | disconnected']
+  last_sync_at timestamptz
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (user_id) [name: 'idx_mailbox_user']
+    (user_id, provider, account_email) [unique, name: 'uq_mailbox_user_provider_email']
+  }
+}
+
+Table email_threads {
+  id uuid [pk]
+  project_id uuid [ref: > projects.id]
+  connection_id uuid [not null, ref: > mailbox_connections.id]
+  provider_thread_id varchar [not null]
+  row_id uuid [note: 'tracker row link']
+  contact_id uuid [ref: > contacts.id]
+  subject varchar
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (connection_id, provider_thread_id) [unique, name: 'uq_thread_provider']
+    (project_id) [name: 'idx_threads_project']
+    (row_id) [name: 'idx_threads_row']
+  }
+}
+
+Table email_messages {
+  id uuid [pk]
+  thread_id uuid [not null, ref: > email_threads.id]
+  provider_message_id varchar [not null]
+  direction varchar [not null, note: 'outgoing | incoming']
+  sent_at timestamptz [not null]
+  reply_type varchar [note: 'auto | human — incoming only']
+  classification varchar [note: 'e.g. rejection, interview_invitation, visit_proposal']
+  received_headers jsonb [note: 'auto-reply headers kept as evidence']
+  created_at timestamptz [not null]
+
+  indexes {
+    (thread_id, provider_message_id) [unique, name: 'uq_message_provider']
+  }
+}
+
+Table email_message_attachments {
+  id uuid [pk]
+  message_id uuid [not null, ref: > email_messages.id]
+  document_id uuid [not null, ref: > documents.id]
+
+  indexes {
+    (message_id, document_id) [unique, name: 'uq_message_attachment']
+  }
+}
+
+Table mail_templates {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  kind varchar [not null, note: 'first_contact | follow_up | visit_request | …']
+  name varchar [not null]
+  subject varchar [not null]
+  body text [not null, note: 'with {{placeholders}}']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (project_id) [name: 'idx_templates_project']
+  }
+}
+
+Table mail_drafts {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  row_id uuid [not null]
+  contact_id uuid [ref: > contacts.id]
+  thread_id uuid [ref: > email_threads.id]
+  mailbox_connection_id uuid [ref: > mailbox_connections.id, note: 'From override; null = project default']
+  kind varchar [not null, note: 'first_contact | follow_up']
+  subject varchar [not null]
+  body text [not null]
+  language varchar [not null]
+  attachment_document_ids uuid[] [note: 'working state; materialized to join table on send']
+  used_highlight_ids text[]
+  warnings text[]
+  state varchar [not null, default: 'editing', note: 'editing | sent | discarded']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (project_id) [name: 'idx_drafts_project']
+    (row_id) [name: 'idx_drafts_row']
+  }
+}
+
+Table mail_proposals {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  row_id uuid [note: 'null for template proposals']
+  kind varchar [not null, note: 'status_change | follow_up | template_proposal']
+  payload jsonb [not null]
+  justification text
+  state varchar [not null, default: 'pending', note: 'pending | accepted | edited | dismissed']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (project_id, state) [name: 'idx_proposals_project_state']
+  }
+}
+
+Table link_analyses {
+  id uuid [pk]
+  project_id uuid [not null, ref: > projects.id]
+  requested_by uuid [not null, note: 'auth.user.id']
+  input_type varchar [not null, note: 'url | text']
+  source text [not null]
+  page_kind varchar [note: 'job_offer | company | careers | school_program | housing_listing | agency | other']
+  status varchar [not null, default: 'pending', note: 'pending | ok | failed']
+  provider varchar [note: 'model provider used, null when deterministic only']
+  timings_ms jsonb
+  error text
+  cleaned_text text [note: 'readable page text after cleaning + truncation']
+  raw_output jsonb [note: 'raw model output, kept for evaluation']
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (project_id) [name: 'idx_analyses_project']
+    (source) [name: 'idx_analyses_source', note: 'URL cache lookups']
+  }
+}
+
+Table jobs {
+  id uuid [pk]
+  type varchar [not null, note: 'reply_sync | doc_text_extract | model_call | purge | export | reconcile']
+  payload jsonb [not null]
+  status varchar [not null, default: 'queued', note: 'queued | running | done | failed']
+  attempts integer [not null, default: 0]
+  run_after timestamptz [not null, default: `now()`]
+  locked_at timestamptz
+  last_error text
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  indexes {
+    (status, run_after) [name: 'idx_jobs_poll', note: 'FOR UPDATE SKIP LOCKED poll']
+  }
+}
+
+
+
+Table document_texts {
+  id uuid [pk]
+  document_id uuid [not null, ref: > documents.id]
+  text text [not null]
+  extracted_at timestamptz [not null]
+
+  indexes {
+    (document_id) [unique, name: 'uq_document_text']
+  }
+}
+
+Table email_contents {
+  id uuid [pk]
+  message_id uuid [not null, ref: > email_messages.id]
+  body text [not null, note: 'sent body, or reply excerpt used for classification']
+
+  indexes {
+    (message_id) [unique, name: 'uq_email_content']
+  }
+}
+
+Table audit_events {
+  id uuid [pk]
+  actor_user_id uuid [note: 'null = system']
+  actor varchar [not null, note: 'user | system']
+  action varchar [not null, note: 'email_sent | mailbox_connected | mailbox_disconnected | reply_field_corrected | …']
+  target_type varchar [not null]
+  target_id uuid
+  metadata jsonb [note: 'no email content, no personal data beyond ids']
+  created_at timestamptz [not null]
+
+  indexes {
+    (created_at) [name: 'idx_audit_created']
+    (actor_user_id, created_at) [name: 'idx_audit_user_created']
+  }
+}
+
+// Better Auth schema (managed by its own migrations — reference only)
+Table auth.user {
+  id uuid [pk]
+  email varchar [not null]
+}
+
+Table auth.session {
+  id uuid [pk]
+  user_id uuid [ref: > auth.user.id]
+}
+
+Table auth.jwks {
+  id varchar [pk, note: 'kid']
+  public_key text [not null]
+}

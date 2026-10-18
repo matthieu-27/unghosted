@@ -1,0 +1,45 @@
+@startuml deployment-staging
+' Unghosted — staging on Hetzner VPS (phase 2)
+title Unghosted — staging deployment (Hetzner VPS)
+
+actor "Developer" as dev
+cloud "GitHub" as gh {
+  [Actions: on merge to main] as action
+}
+
+node "Hetzner VPS (Docker Compose)" as vps {
+  [Caddy / reverse proxy + TLS] as proxy
+  [web (TanStack Start, Bun)] as web
+  [api (Litestar)] as api
+  [worker] as worker
+  database "postgres" as pg
+  database "mongo" as mongo
+  storage "storage volume" as vol
+}
+
+storage "Off-VPS backups (both DBs + volume)" as backup
+
+dev --> gh : merge to main
+action --> vps : deploy over SSH
+proxy --> web : /
+proxy --> api : /api/v1
+
+web ..> pg : Better Auth (schema auth)
+api --> pg
+api --> mongo
+api --> vol : storage gateway (local impl)
+worker --> pg
+worker --> mongo
+worker --> vol
+
+pg ..> backup : nightly dump + tested restore
+mongo ..> backup : nightly dump
+vol ..> backup : rsync
+
+note bottom of vps
+  Environment key for token/file encryption from
+  configuration (env). No real personal data beyond
+  the owner's test accounts. Working environment,
+  not the jury deliverable.
+end note
+@enduml

@@ -1,0 +1,142 @@
+{
+  "$schema": "../schemas/template.schema.json",
+  "key": "apprenticeship-search",
+  "version": 1,
+  "label": "Apprenticeship search",
+  "description": "Track work-study applications: interviews, follow-ups, response rates.",
+  "settings": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "contract_end_date": { "type": "string", "format": "date" },
+        "no_response_threshold_days": { "type": "integer", "default": 21, "minimum": 1 }
+      },
+      "required": []
+    },
+    "defaults": {
+      "no_response_threshold_days": 21
+    }
+  },
+  "columns": [
+    { "key": "date_sent", "type": "date", "label": "Date sent" },
+    { "key": "company", "type": "text", "label": "Company" },
+    { "key": "position", "type": "text", "label": "Position" },
+    { "key": "listing_url", "type": "url", "label": "Listing URL" },
+    { "key": "location", "type": "text", "label": "Location" },
+    {
+      "key": "work_mode",
+      "type": "select",
+      "label": "Work mode",
+      "options": [
+        { "key": "on_site", "label": "On-site" },
+        { "key": "hybrid", "label": "Hybrid" },
+        { "key": "remote", "label": "Remote" }
+      ]
+    },
+    {
+      "key": "contract_type",
+      "type": "select",
+      "label": "Contract type",
+      "options": [
+        { "key": "work_study", "label": "Work-study" },
+        { "key": "permanent", "label": "Permanent (CDI)" },
+        { "key": "fixed_term", "label": "Fixed-term (CDD)" },
+        { "key": "internship", "label": "Internship" },
+        { "key": "freelance", "label": "Freelance" },
+        { "key": "temp", "label": "Temp" },
+        { "key": "vie", "label": "VIE" }
+      ]
+    },
+    {
+      "key": "source",
+      "type": "select",
+      "label": "Source",
+      "options": [
+        { "key": "linkedin", "label": "LinkedIn" },
+        { "key": "indeed", "label": "Indeed" },
+        { "key": "wttj", "label": "Welcome to the Jungle" },
+        { "key": "france_travail", "label": "France Travail" },
+        { "key": "apec", "label": "APEC" },
+        { "key": "hellowork", "label": "HelloWork" },
+        { "key": "company_website", "label": "Company website" },
+        { "key": "referral", "label": "Referral" },
+        { "key": "recruitment_agency", "label": "Recruitment agency" },
+        { "key": "spontaneous", "label": "Spontaneous" },
+        { "key": "school_job_board", "label": "School job board" },
+        { "key": "internal", "label": "Internal" },
+        { "key": "other", "label": "Other" }
+      ]
+    },
+    {
+      "key": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        { "key": "to_apply", "label": "To apply", "color": null },
+        { "key": "sent", "label": "Sent", "color": null },
+        { "key": "followed_up", "label": "Followed up", "color": null },
+        { "key": "hr_interview", "label": "HR interview", "color": "blue" },
+        { "key": "technical_interview", "label": "Technical interview", "color": "blue" },
+        { "key": "case_study", "label": "Étude de cas", "color": "blue" },
+        { "key": "final_interview", "label": "Final interview", "color": "blue" },
+        { "key": "offer", "label": "Offer", "color": "green" },
+        { "key": "accepted", "label": "Accepted", "color": "green" },
+        { "key": "rejected", "label": "Rejected", "color": "red" },
+        { "key": "declined", "label": "Declined", "color": "grey" },
+        { "key": "no_response", "label": "No response", "color": "grey" },
+        { "key": "position_closed", "label": "Position closed", "color": "grey" }
+      ]
+    },
+    { "key": "last_contact", "type": "date", "label": "Last contact" },
+    { "key": "response_date", "type": "date", "label": "Response date", "system": true },
+    {
+      "key": "reply_type",
+      "type": "select",
+      "label": "Reply type",
+      "system": true,
+      "options": [
+        { "key": "auto", "label": "Auto-reply" },
+        { "key": "human", "label": "Human" }
+      ]
+    },
+    { "key": "next_action", "type": "text", "label": "Next action" },
+    { "key": "next_action_date", "type": "date", "label": "Next action date" },
+    { "key": "follow_ups", "type": "number", "label": "Follow-ups" },
+    { "key": "contact", "type": "contact-link", "label": "Contact" },
+    { "key": "salary_range_advertised", "type": "text", "label": "Salary range (advertised)" },
+    { "key": "salary_offered", "type": "currency", "label": "Salary offered", "currency": "EUR" },
+    { "key": "cv", "type": "document-link", "label": "CV" },
+    { "key": "customised_letter", "type": "document-link", "label": "Customised letter" },
+    { "key": "interest", "type": "rating", "label": "Interest", "max": 5 },
+    { "key": "notes", "type": "long-text", "label": "Notes" },
+    { "key": "days_since_sent", "type": "computed", "label": "Days since sent", "computed": "today_minus_date_sent" }
+  ],
+  "conditional_rules": [],
+  "statistics": [],
+  "document_types": [
+    { "key": "cv", "label": "CV", "model_eligible": true },
+    { "key": "motivation_letter", "label": "Motivation letter", "model_eligible": true },
+    { "key": "generated_customised_letter", "label": "Generated customised letter", "model_eligible": true },
+    { "key": "employment_contract", "label": "Employment contract", "model_eligible": false },
+    { "key": "payslip", "label": "Payslip", "model_eligible": false },
+    { "key": "tax_notice", "label": "Tax notice", "model_eligible": false },
+    { "key": "id_document", "label": "ID document", "model_eligible": false },
+    { "key": "guarantor_document", "label": "Guarantor document", "model_eligible": false },
+    { "key": "bank_details", "label": "Bank details", "model_eligible": false },
+    { "key": "other", "label": "Other", "model_eligible": false }
+  ],
+  "mail_templates": [
+    { "key": "follow-up-application", "kind": "follow_up" },
+    { "key": "thank-you-interview", "kind": "follow_up" },
+    { "key": "follow-up-interview", "kind": "follow_up" }
+  ],
+  "allowed_page_kinds": ["job_offer", "company", "careers", "school_program", "agency", "other"],
+  "analysis_hints": {
+    "job_offer": ["position", "company", "contract_type", "location", "salary_range_advertised", "work_mode", "listing_url"],
+    "company": ["company", "location", "listing_url"],
+    "careers": ["company", "location"],
+    "school_program": ["company", "position", "next_action_date"],
+    "agency": ["company", "location"],
+    "other": ["company"]
+  }
+}

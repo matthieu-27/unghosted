@@ -1,0 +1,79 @@
+@startuml mcd
+' Unghosted — MCD (conceptual, Merise-style), MVP scope only (docs/mvp.md).
+' Post-MVP concepts (auth, contacts, OAuth mailboxes, mail templates,
+' proposals, jobs, statistics, conditional formatting) live in the full MCD
+' in git history and return with their slices.
+' Sending runs through the SMTP gateway to Mailpit (no mailbox entity yet).
+title Unghosted — MCD (MVP scope)
+
+hide methods
+skinparam linetype ortho
+
+entity "User (seeded owner)" as user {
+  id
+}
+
+entity "Project" as project {
+  name
+  template key + version
+  archived
+}
+
+entity "Tracker row" as row {
+  order key
+  cells
+  revision
+}
+
+entity "Tracker definition" as tdef {
+  columns
+  settings
+}
+
+entity "Document" as doc {
+  type
+  model-eligible
+  storage key
+}
+
+entity "Applicant profile" as profile {
+  version
+  status (draft/approved)
+}
+
+entity "Email thread" as thread {
+  subject
+}
+
+entity "Email message" as message {
+  direction
+}
+
+entity "Mail draft" as draft {
+  kind (letter/first-contact)
+  subject, body
+}
+
+entity "Link analysis" as analysis {
+  source (url/text)
+  page kind, status
+}
+
+entity "Audit event" as audit {
+  actor, action, target
+}
+
+user ||--o{ project : owns (1,N)
+project ||--o{ row : "contains (0,N, in Mongo)"
+project ||--|| tdef : "has exactly 1 (in Mongo)"
+project ||--o{ doc : (1,N)
+project ||--o{ profile : versions (1,N)
+project ||--o{ analysis : (0,N)
+doc }o--o{ row : "referenced by document-link cells"
+doc }o--o{ profile : "feeds drafts of (eligible docs only)"
+thread ||--o{ message : contains (1,N)
+message }o--o{ doc : "attachments (first-contact CV + letter)"
+row ||--o{ thread : "tracked by (0,N)"
+row ||--o{ draft : (0,N)
+user ||--o{ audit : "triggers (0,N; system actor for send events)"
+@enduml

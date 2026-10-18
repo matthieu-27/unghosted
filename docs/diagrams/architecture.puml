@@ -1,0 +1,72 @@
+@startuml architecture
+' Unghosted — component architecture (phase 1)
+title Unghosted — architecture
+
+skinparam componentStyle rectangle
+
+actor "User (browser)" as user
+
+package "apps/web — TanStack Start (Bun)" {
+  [SSR landing + app shell] as shell
+  [Better Auth (server routes)] as auth
+  [Tracker grid (TanStack Table v9 + Virtual)] as grid
+  [API client (JWT fetch/refresh)] as apiclient
+}
+
+package "apps/api — Litestar (Python, uv)" {
+  [Controllers /api/v1] as api
+  [Services] as services
+  [Domain (pure)] as domain
+  [Repositories (SQL / NoSQL)] as repos
+  [Gateways] as gateways
+}
+
+package "apps/worker — same codebase" {
+  [Job loop] as jobloop
+  [Reply sync] as replysync
+  [Doc processing / model calls / purges] as docproc
+}
+
+database "PostgreSQL\nschema auth (Better Auth)\nschema app" as pg
+database "MongoDB\nunghosted" as mongo
+storage "File storage\nlocal FS | AWS S3" as files
+
+cloud "External" {
+  [Gmail API] as gmail
+  [Microsoft Graph] as graph
+  [Model provider (Mistral)] as model
+  [Fetched pages] as web
+}
+
+user --> shell
+user --> grid
+shell --> auth
+grid --> apiclient
+apiclient --> api
+api --> services
+services --> domain
+services --> repos
+repos --> pg
+repos --> mongo
+services --> gateways
+gateways --> files
+jobloop --> replysync
+jobloop --> docproc
+replysync --> gmail
+replysync --> graph
+docproc --> model
+docproc --> files
+services --> model
+services --> web : link analysis fetch\n(SSRF-guarded, worker)
+pg <.. jobloop : jobs table (SKIP LOCKED)
+
+note bottom of domain
+  Pure, framework-free: stats, conditional rules,
+  source detection, eligibility, reply rules,
+  placeholders, operations, sending limits
+end note
+note right of gateways
+  Behind interfaces: model, gmail,
+  graph, storage (local + S3)
+end note
+@enduml

@@ -1,0 +1,54 @@
+@startuml storage-layout
+' Unghosted — file storage layout + envelope encryption
+title Unghosted — file storage and encryption
+
+skinparam linetype ortho
+
+storage "Local filesystem (dev, CI, staging)\nvolume: /var/lib/unghosted/storage" as local {
+  folder "users/{userId}/documents/{documentId}.bin" as l1
+  folder "users/{userId}/exports/{exportJobId}.bin" as l2
+}
+
+storage "AWS S3 (production)\nbucket: unghosted-documents (private)" as s3 {
+  folder "users/{userId}/documents/{documentId}.bin" as s1
+  folder "users/{userId}/exports/{exportJobId}.bin" as s2
+}
+
+card "Storage gateway (interface)" as gateway
+cloud "AWS KMS (prod) / config key (dev, staging)" as kms
+
+gateway .. local : configuration selects
+gateway .. s3 : configuration selects
+s3 .. kms : master key decrypt/encrypt data keys
+
+note right of gateway
+  Contract test suite shared by both implementations:
+  write, read as stream, delete, missing-key, large file.
+  S3 tested in CI with moto (in-process); real-bucket
+  smoke test only in the AWS deploy pipeline.
+end note
+
+note bottom of local
+  No S3-compatible server in dev (ADR 0001):
+  storage is behind the interface, so a local volume
+  exercises the same code path minus the HTTP transport.
+end note
+
+card "Envelope encryption (identical both backends)" as enc {
+  card "file content" as content
+  card "random data key (AES-256-GCM)\nencrypts content" as datakey
+  card "master key encrypts data key" as wrap
+  content <- datakey
+  datakey <- wrap
+}
+
+enc .. gateway : encrypted bytes only reach storage
+
+note bottom of enc
+  documents.encrypted_data_key + key_algorithm_version
+  stored in Postgres. Same mechanism as OAuth tokens.
+  Files served only via API download endpoint:
+  ownership check every request, decrypted stream,
+  never presigned URLs, never inline from app origin.
+end note
+@enduml
