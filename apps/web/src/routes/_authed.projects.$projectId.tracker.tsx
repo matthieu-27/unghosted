@@ -9,6 +9,7 @@ import { TrackerGrid } from '@/components/tracker/tracker-grid';
 import { Button } from '@/components/ui/button';
 import { TitleRow } from '@/components/workspace/title-row';
 import { useAutosave } from '@/hooks/use-autosave';
+import { useContacts } from '@/hooks/use-contacts';
 import { useTracker } from '@/hooks/use-tracker';
 import { apiFetch } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
@@ -48,6 +49,9 @@ function TrackerPage() {
     queryFn: () => apiFetch<ProjectSummary>(`/projects/${projectId}`),
   });
   const tracker = useTracker(projectId);
+  // The whole unfiltered list: contact-link cells resolve ids against it
+  // (us-7 item 2), so the grid needs every contact, not a search page.
+  const contacts = useContacts(projectId);
   const { rows, status, push } = useTrackerAutosave(projectId, tracker.data);
 
   if (tracker.isError) {
@@ -94,6 +98,7 @@ function TrackerPage() {
         <TrackerGrid
           columns={columns}
           rows={rows}
+          contacts={contacts.data ?? []}
           onOperation={push}
           onAddRow={() => push({ op: 'insert_rows', count: 1 })}
           onDeleteRow={(rowId) => push({ op: 'delete_rows', row_ids: [rowId] })}
