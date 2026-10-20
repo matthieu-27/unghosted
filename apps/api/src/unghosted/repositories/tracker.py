@@ -126,3 +126,26 @@ class TrackerRepository:
                 current["revision"] if current else expected_revision
             )
         return int(result["revision"])
+
+    async def pull_from_cells(
+        self,
+        project_id: uuid.UUID,
+        column_keys: list[str],
+        *values: object,
+    ) -> int:
+        """Remove every occurrence of the values from the given cells.
+
+        The contact-delete compensation: a deleted contact's id leaves the
+        cells, the rows stay. Both the uuid and its string form are pulled,
+        because a cell may hold either depending on which client wrote it.
+        """
+        if not column_keys or not values:
+            return 0
+        variants: list[object] = []
+        for value in values:
+            variants.extend({value, str(value)} if value is not None else {None})
+        result = await self._rows.update_many(
+            {"project_id": project_id},
+            {"$pull": {f"cells.{key}": {"$in": variants} for key in column_keys}},
+        )
+        return int(result.modified_count)

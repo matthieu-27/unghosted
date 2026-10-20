@@ -343,3 +343,62 @@ class AuditEvent(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     """Append-only: audit rows are never updated, so no updated_at."""
+
+
+class Contact(Base):
+    __tablename__ = "contacts"
+    __table_args__: Any = {"schema": "app"}  # noqa: RUF012 — see Project
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("app.projects.id"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    role: Mapped[str | None] = mapped_column(String, nullable=True)
+    organization: Mapped[str | None] = mapped_column(String, nullable=True)
+    email: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    phone: Mapped[str | None] = mapped_column(String, nullable=True)
+    profile_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class ContactRowLink(Base):
+    """Postgres index of the contact-link cells: which rows of the Mongo
+    tracker a contact serves. The cell is what the user edits (ADR 0001
+    data split); this table makes the reverse question one cheap query."""
+
+    __tablename__ = "contact_row_links"
+    __table_args__: Any = (
+        UniqueConstraint("contact_id", "row_id"),
+        {"schema": "app"},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("app.projects.id"), nullable=False, index=True
+    )
+    contact_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("app.contacts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    row_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

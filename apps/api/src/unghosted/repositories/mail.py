@@ -141,6 +141,21 @@ class EmailThreadRepository:
             await self._session.refresh(thread)
         return thread
 
+    async def list_for_recipient(
+        self, project_id: uuid.UUID, recipient: str
+    ) -> Sequence[EmailThread]:
+        """Threads addressed to one recipient — the contact detail panel
+        (us-7 item 1)."""
+        stmt = (
+            select(EmailThread)
+            .where(
+                EmailThread.project_id == project_id,
+                EmailThread.recipient == recipient,
+            )
+            .order_by(EmailThread.created_at)
+        )
+        return (await self._session.scalars(stmt)).all()
+
 
 class EmailMessageRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -212,6 +227,25 @@ class EmailMessageRepository:
             .order_by(EmailMessage.sent_at.desc())
         )
         return (await self._session.scalars(stmt)).all()
+
+    async def thread_stats(
+        self, thread_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, tuple[int, datetime | None]]:
+        """Message count and last send per thread, in one grouped query —
+        the contact detail panel's thread rows (us-7 item 1)."""
+        if not thread_ids:
+            return {}
+        stmt = (
+            select(
+                EmailMessage.thread_id,
+                func.count(),
+                func.max(EmailMessage.sent_at),
+            )
+            .where(EmailMessage.thread_id.in_(thread_ids))
+            .group_by(EmailMessage.thread_id)
+        )
+        rows = (await self._session.execute(stmt)).all()
+        return {thread_id: (int(count), last_at) for thread_id, count, last_at in rows}
 
 
 class AuditEventRepository:

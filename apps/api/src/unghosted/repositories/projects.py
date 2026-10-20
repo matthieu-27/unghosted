@@ -34,6 +34,17 @@ class ProjectRepository:
         stmt = stmt.order_by(Project.updated_at.desc())
         return (await self._session.scalars(stmt)).all()
 
+    async def list_all_live(self) -> Sequence[Project]:
+        """Every not-deleted project, regardless of owner — the
+        reconciliation command's scope. Archived projects stay in: their
+        trackers and links can drift the same as live ones."""
+        stmt = (
+            select(Project)
+            .where(Project.deleted_at.is_(None))
+            .order_by(Project.created_at)
+        )
+        return (await self._session.scalars(stmt)).all()
+
     async def get(self, project_id: uuid.UUID, owner: uuid.UUID) -> Project:
         project = await self._session.get(Project, project_id)
         if (
