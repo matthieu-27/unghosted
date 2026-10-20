@@ -7,6 +7,14 @@ from unghosted.schemas.consents import (
     ConsentList,
     ConsentRead,
 )
+from unghosted.schemas.contacts import (
+    ContactCreate,
+    ContactDetailRead,
+    ContactList,
+    ContactRead,
+    ContactThreadRead,
+    ContactUpdate,
+)
 from unghosted.schemas.documents import (
     DocumentList,
     DocumentRead,
@@ -64,6 +72,12 @@ __all__ = [
     "ConsentKind",
     "ConsentList",
     "ConsentRead",
+    "ContactCreate",
+    "ContactDetailRead",
+    "ContactList",
+    "ContactRead",
+    "ContactThreadRead",
+    "ContactUpdate",
     "DocumentList",
     "DocumentRead",
     "DocumentTypeRead",

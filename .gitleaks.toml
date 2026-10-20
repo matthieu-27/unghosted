@@ -1,0 +1,9 @@
+# Gitleaks configuration (pre-commit secret scanning, brief section 9.1).
+# The default ruleset, plus the project's vetted false positives.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ed25519PrivateKey is a type annotation on test fixtures (the throwaway signing key), not a secret value"
+regexes = ['Ed25519PrivateKey']

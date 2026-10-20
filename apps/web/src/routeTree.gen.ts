@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthedProjectsIndexRouteImport } from './routes/_authed.projects.index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AuthedProjectsProjectIdContactsRouteImport } from './routes/_authed.projects.$projectId.contacts'
 import { Route as AuthedProjectsProjectIdDocumentsRouteImport } from './routes/_authed.projects.$projectId.documents'
 import { Route as AuthedProjectsProjectIdMailRouteImport } from './routes/_authed.projects.$projectId.mail'
 import { Route as AuthedProjectsProjectIdTrackerRouteImport } from './routes/_authed.projects.$projectId.tracker'
@@ -48,6 +49,12 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedProjectsProjectIdContactsRoute =
+  AuthedProjectsProjectIdContactsRouteImport.update({
+    id: '/projects/$projectId/contacts',
+    path: '/projects/$projectId/contacts',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedProjectsProjectIdDocumentsRoute =
   AuthedProjectsProjectIdDocumentsRouteImport.update({
     id: '/projects/$projectId/documents',
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/projects/': typeof AuthedProjectsIndexRoute
+  '/projects/$projectId/contacts': typeof AuthedProjectsProjectIdContactsRoute
   '/projects/$projectId/documents': typeof AuthedProjectsProjectIdDocumentsRoute
   '/projects/$projectId/mail': typeof AuthedProjectsProjectIdMailRoute
   '/projects/$projectId/tracker': typeof AuthedProjectsProjectIdTrackerRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/projects': typeof AuthedProjectsIndexRoute
+  '/projects/$projectId/contacts': typeof AuthedProjectsProjectIdContactsRoute
   '/projects/$projectId/documents': typeof AuthedProjectsProjectIdDocumentsRoute
   '/projects/$projectId/mail': typeof AuthedProjectsProjectIdMailRoute
   '/projects/$projectId/tracker': typeof AuthedProjectsProjectIdTrackerRoute
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_authed/projects/': typeof AuthedProjectsIndexRoute
+  '/_authed/projects/$projectId/contacts': typeof AuthedProjectsProjectIdContactsRoute
   '/_authed/projects/$projectId/documents': typeof AuthedProjectsProjectIdDocumentsRoute
   '/_authed/projects/$projectId/mail': typeof AuthedProjectsProjectIdMailRoute
   '/_authed/projects/$projectId/tracker': typeof AuthedProjectsProjectIdTrackerRoute
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/api/auth/$'
     | '/projects/'
+    | '/projects/$projectId/contacts'
     | '/projects/$projectId/documents'
     | '/projects/$projectId/mail'
     | '/projects/$projectId/tracker'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/api/auth/$'
     | '/projects'
+    | '/projects/$projectId/contacts'
     | '/projects/$projectId/documents'
     | '/projects/$projectId/mail'
     | '/projects/$projectId/tracker'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/api/auth/$'
     | '/_authed/projects/'
+    | '/_authed/projects/$projectId/contacts'
     | '/_authed/projects/$projectId/documents'
     | '/_authed/projects/$projectId/mail'
     | '/_authed/projects/$projectId/tracker'
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/projects/$projectId/contacts': {
+      id: '/_authed/projects/$projectId/contacts'
+      path: '/projects/$projectId/contacts'
+      fullPath: '/projects/$projectId/contacts'
+      preLoaderRoute: typeof AuthedProjectsProjectIdContactsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/projects/$projectId/documents': {
       id: '/_authed/projects/$projectId/documents'
       path: '/projects/$projectId/documents'
@@ -211,6 +231,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteChildren {
   AuthedProjectsIndexRoute: typeof AuthedProjectsIndexRoute
+  AuthedProjectsProjectIdContactsRoute: typeof AuthedProjectsProjectIdContactsRoute
   AuthedProjectsProjectIdDocumentsRoute: typeof AuthedProjectsProjectIdDocumentsRoute
   AuthedProjectsProjectIdMailRoute: typeof AuthedProjectsProjectIdMailRoute
   AuthedProjectsProjectIdTrackerRoute: typeof AuthedProjectsProjectIdTrackerRoute
@@ -218,6 +239,7 @@ interface AuthedRouteChildren {
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedProjectsIndexRoute: AuthedProjectsIndexRoute,
+  AuthedProjectsProjectIdContactsRoute: AuthedProjectsProjectIdContactsRoute,
   AuthedProjectsProjectIdDocumentsRoute: AuthedProjectsProjectIdDocumentsRoute,
   AuthedProjectsProjectIdMailRoute: AuthedProjectsProjectIdMailRoute,
   AuthedProjectsProjectIdTrackerRoute: AuthedProjectsProjectIdTrackerRoute,

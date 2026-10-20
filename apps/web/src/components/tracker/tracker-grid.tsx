@@ -15,6 +15,10 @@ import type { Virtualizer } from '@tanstack/react-virtual';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useMemo, useRef, useState } from 'react';
 import { CellDisplay, CellEditor } from '@/components/tracker/cell-editors';
+import {
+  ContactCellDisplay,
+  ContactCellEditor,
+} from '@/components/tracker/contact-cell';
 import { features } from '@/components/tracker/data-table-features';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import type { Contact } from '@/lib/contact-types';
 import type {
   ColumnDefinition,
   TrackerOperation,
@@ -54,6 +59,8 @@ const headerWidth = (column: ColumnDefinition | undefined) =>
 interface TrackerGridProps {
   columns: ColumnDefinition[];
   rows: TrackerRow[];
+  /** The project's contacts, for the contact-link cells (us-7 item 2). */
+  contacts?: Contact[];
   onOperation: (operation: TrackerOperation) => void;
   onAddRow: () => void;
   onDeleteRow: (rowId: string) => void;
@@ -70,6 +77,7 @@ function cellKeyDown(event: React.KeyboardEvent, onSelect: () => void): void {
 interface TrackerCellProps {
   column: ColumnDefinition;
   row: TrackerRow;
+  contacts: Contact[];
   editing: boolean;
   onSelect: () => void;
   onOperation: (operation: TrackerOperation) => void;
@@ -77,10 +85,12 @@ interface TrackerCellProps {
 }
 
 /** One grid cell: editable cells are focusable + keyboard-activatable, and
- * swap in the type-appropriate editor when selected. */
+ * swap in the type-appropriate editor when selected. Contact-link cells
+ * resolve against the project's contacts (us-7 item 2). */
 function TrackerCell({
   column,
   row,
+  contacts,
   editing,
   onSelect,
   onOperation,
@@ -94,6 +104,13 @@ function TrackerCell({
         onKeyDown: (event: React.KeyboardEvent) => cellKeyDown(event, onSelect),
       }
     : { tabIndex: -1 };
+  const setCell = (value: unknown) =>
+    onOperation({
+      op: 'set_cell',
+      row_id: row.id,
+      column_key: column.key,
+      value,
+    });
   return (
     <TableCell
       data-editing={editing}
@@ -102,20 +119,30 @@ function TrackerCell({
       {...interactions}
     >
       {editing ? (
-        <CellEditor
-          column={column}
-          row={row}
-          onCommit={(value) => {
-            onOperation({
-              op: 'set_cell',
-              row_id: row.id,
-              column_key: column.key,
-              value,
-            });
-            onStopEditing();
-          }}
-          onCancel={onStopEditing}
-        />
+        column.type === 'contact-link' ? (
+          <ContactCellEditor
+            label={column.label}
+            value={row.cells[column.key]}
+            contacts={contacts}
+            onCommit={(value) => {
+              setCell(value);
+              onStopEditing();
+            }}
+            onCancel={onStopEditing}
+          />
+        ) : (
+          <CellEditor
+            column={column}
+            row={row}
+            onCommit={(value) => {
+              setCell(value);
+              onStopEditing();
+            }}
+            onCancel={onStopEditing}
+          />
+        )
+      ) : column.type === 'contact-link' ? (
+        <ContactCellDisplay value={row.cells[column.key]} contacts={contacts} />
       ) : (
         <CellDisplay column={column} row={row} />
       )}
@@ -127,6 +154,7 @@ interface GridRowsProps {
   virtualizer: Virtualizer<HTMLDivElement, Element>;
   rows: TrackerRow[];
   columns: ColumnDefinition[];
+  contacts: Contact[];
   selectedRowId: string | undefined;
   selectedColumnId: string | undefined;
   onOperation: (operation: TrackerOperation) => void;
@@ -142,6 +170,7 @@ function GridRows({
   virtualizer,
   rows,
   columns,
+  contacts,
   selectedRowId,
   selectedColumnId,
   onOperation,
@@ -176,6 +205,7 @@ function GridRows({
                   key={column.key}
                   column={column}
                   row={row}
+                  contacts={contacts}
                   editing={
                     selectedRowId === row.id && selectedColumnId === column.key
                   }
@@ -234,6 +264,7 @@ function selectCell(
 export function TrackerGrid({
   columns,
   rows,
+  contacts = [],
   onOperation,
   onAddRow,
   onDeleteRow,
@@ -314,6 +345,7 @@ export function TrackerGrid({
             virtualizer={virtualizer}
             rows={rows}
             columns={columns}
+            contacts={contacts}
             selectedRowId={selectedRowId}
             selectedColumnId={selectedColumnId}
             onOperation={onOperation}

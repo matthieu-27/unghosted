@@ -11,7 +11,9 @@ from litestar.exceptions import ValidationException
 from litestar.middleware import DefineMiddleware
 
 from unghosted.api.auth import JwtAuthMiddleware
+from unghosted.api.cli import ContactsCliPlugin
 from unghosted.api.consents import ConsentController
+from unghosted.api.contacts import ContactController
 from unghosted.api.deps import build_dependencies
 from unghosted.api.documents import DocumentController
 from unghosted.api.error_handlers import validation_exception_handler
@@ -110,6 +112,7 @@ def create_app(settings: Settings | None = None) -> Litestar:
             HealthController,
             ProjectController,
             TrackerController,
+            ContactController,
             LinkAnalysisController,
             DocumentController,
             ProfileController,
@@ -117,6 +120,7 @@ def create_app(settings: Settings | None = None) -> Litestar:
             ConsentController,
         ],
         dependencies=build_dependencies(),
+        plugins=[ContactsCliPlugin()],
         # Liveness and the OpenAPI schema stay public; everything else needs
         # a Better Auth JWT (us-6 item 3).
         middleware=[
@@ -134,6 +138,7 @@ def create_app(settings: Settings | None = None) -> Litestar:
             {
                 "settings": settings,
                 "session_factory": session_factory,
+                "engine": engine,
                 "mongo_client": mongo_client,
                 "mongo_db": mongo_db,
                 "templates": templates,

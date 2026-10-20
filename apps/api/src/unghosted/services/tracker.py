@@ -12,6 +12,7 @@ from unghosted.domain.operations import (
 )
 from unghosted.repositories.projects import ProjectRepository
 from unghosted.repositories.tracker import StaleRevisionError, TrackerRepository
+from unghosted.services.contacts import ContactLinkIndexer, contact_link_column_keys
 
 
 @dataclass(frozen=True)
@@ -31,9 +32,15 @@ class AppliedResult:
 
 
 class TrackerService:
-    def __init__(self, projects: ProjectRepository, tracker: TrackerRepository) -> None:
+    def __init__(
+        self,
+        projects: ProjectRepository,
+        tracker: TrackerRepository,
+        links: ContactLinkIndexer,
+    ) -> None:
         self._projects = projects
         self._tracker = tracker
+        self._links = links
 
     async def fetch(self, project_id: uuid.UUID, owner: uuid.UUID) -> TrackerState:
         await self._projects.get(project_id, owner)  # ownership gate
@@ -62,18 +69,38 @@ class TrackerService:
         # OperationError propagates: the controller maps it to 422.
         batch = apply_operations(definition["columns"], rows, operations)
 
+        upserted_rows = [
+            r for r in batch.rows if r["_id"] in set(batch.upserted_row_ids)
+        ]
+        changed_rows = [r for r in batch.rows if r["_id"] in set(batch.changed_row_ids)]
+        deleted_row_ids = list(batch.deleted_row_ids)
+
+        # Contact ids are checked before anything is written: an unknown id
+        # is a 422, never a cell that outlives its contact.
+        column_keys = contact_link_column_keys(definition)
+        await self._links.validate(
+            project_id,
+            column_keys=column_keys,
+            rows=[*upserted_rows, *changed_rows],
+        )
+
         new_definition = {**definition, "columns": batch.columns}
         revision = await self._tracker.save_batch(
             project_id,
             expected_revision=base_revision,
             new_definition=new_definition,
-            upserted_rows=[
-                r for r in batch.rows if r["_id"] in set(batch.upserted_row_ids)
-            ],
-            deleted_row_ids=list(batch.deleted_row_ids),
-            changed_rows=[
-                r for r in batch.rows if r["_id"] in set(batch.changed_row_ids)
-            ],
+            upserted_rows=upserted_rows,
+            deleted_row_ids=deleted_row_ids,
+            changed_rows=changed_rows,
+        )
+        # After the Mongo commit. The sync failure propagates so the request
+        # fails loudly and the client retries the idempotent batch, instead
+        # of a 2xx with a silently stale link index.
+        await self._links.sync(
+            project_id,
+            column_keys=column_keys,
+            rows=[*upserted_rows, *changed_rows],
+            deleted_row_ids=deleted_row_ids,
         )
         return AppliedResult(
             revision=revision,

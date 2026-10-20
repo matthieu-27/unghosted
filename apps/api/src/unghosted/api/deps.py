@@ -20,6 +20,10 @@ from unghosted.api.auth import AuthenticatedUser
 from unghosted.config import Settings
 from unghosted.domain.templates import Template
 from unghosted.repositories.consents import ConsentRepository
+from unghosted.repositories.contacts import (
+    ContactRepository,
+    ContactRowLinkRepository,
+)
 from unghosted.repositories.documents import (
     DocumentRepository,
     DocumentTextRepository,
@@ -36,6 +40,7 @@ from unghosted.repositories.profiles import ApplicantProfileRepository
 from unghosted.repositories.projects import ProjectRepository
 from unghosted.repositories.tracker import TrackerRepository
 from unghosted.services.consents import ConsentService
+from unghosted.services.contacts import ContactLinkIndexer, ContactService
 from unghosted.services.documents import DocumentService
 from unghosted.services.link_analysis import LinkAnalysisService
 from unghosted.services.mail import MailService
@@ -78,8 +83,37 @@ def provide_project_service(
 def provide_tracker_service(
     session: NamedDependency[AsyncSession], state: State
 ) -> TrackerService:
+    return _tracker_service(session, state)
+
+
+def _tracker_service(session: AsyncSession, state: State) -> TrackerService:
+    """One construction for the route dependency and MailService: the link
+    indexer rides along, so every tracker write keeps the Postgres index in
+    step wherever it is triggered from."""
     db: AsyncDatabase[dict[str, object]] = state.mongo_db
-    return TrackerService(ProjectRepository(session), TrackerRepository(db))
+    return TrackerService(
+        ProjectRepository(session),
+        TrackerRepository(db),
+        ContactLinkIndexer(
+            contacts=ContactRepository(session),
+            links=ContactRowLinkRepository(session),
+        ),
+    )
+
+
+def provide_contact_service(
+    session: NamedDependency[AsyncSession], state: State
+) -> ContactService:
+    db: AsyncDatabase[dict[str, object]] = state.mongo_db
+    return ContactService(
+        projects=ProjectRepository(session),
+        contacts=ContactRepository(session),
+        links=ContactRowLinkRepository(session),
+        tracker=TrackerRepository(db),
+        threads=EmailThreadRepository(session),
+        messages=EmailMessageRepository(session),
+        audit=AuditEventRepository(session),
+    )
 
 
 def provide_link_analysis_service(
@@ -141,7 +175,7 @@ def provide_mail_service(
     db: AsyncDatabase[dict[str, object]] = state.mongo_db
     return MailService(
         projects=ProjectRepository(session),
-        tracker=TrackerService(ProjectRepository(session), TrackerRepository(db)),
+        tracker=_tracker_service(session, state),
         analyses=LinkAnalysisRepository(session),
         documents=DocumentRepository(session),
         texts=DocumentTextRepository(session),
@@ -170,6 +204,7 @@ def build_dependencies() -> dict[str, Provide]:
         "current_user": Provide(provide_current_user, sync_to_thread=False),
         "project_service": Provide(provide_project_service, sync_to_thread=False),
         "tracker_service": Provide(provide_tracker_service, sync_to_thread=False),
+        "contact_service": Provide(provide_contact_service, sync_to_thread=False),
         "link_analysis_service": Provide(
             provide_link_analysis_service, sync_to_thread=False
         ),
