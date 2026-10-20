@@ -6,6 +6,8 @@
  * lands with the accessibility pass — the native table semantics carry M1.
  */
 
+import { Add01Icon, Delete02Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import {
   type CellSelectionState,
   createColumnHelper,
@@ -84,6 +86,14 @@ interface TrackerCellProps {
   onStopEditing: () => void;
 }
 
+/** Numeric columns render right-aligned with tabular figures, so amounts
+ * and percents line up for scanning (table-design: predictable alignment). */
+const NUMERIC_TYPES = new Set(['number', 'currency', 'percent']);
+
+function cellAlignment(column: ColumnDefinition): string {
+  return NUMERIC_TYPES.has(column.type) ? 'text-right' : 'text-left';
+}
+
 /** One grid cell: editable cells are focusable + keyboard-activatable, and
  * swap in the type-appropriate editor when selected. Contact-link cells
  * resolve against the project's contacts (us-7 item 2). */
@@ -115,7 +125,7 @@ function TrackerCell({
     <TableCell
       data-editing={editing}
       style={{ width: columnWidth(column) }}
-      className="cursor-cell truncate px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring data-[editing=true]:outline-2 data-[editing=true]:outline-ring"
+      className={`cursor-cell truncate px-2 text-sm ${cellAlignment(column)} focus-visible:outline-2 focus-visible:outline-ring data-[editing=true]:outline-2 data-[editing=true]:outline-primary`}
       {...interactions}
     >
       {editing ? (
@@ -191,7 +201,7 @@ function GridRows({
             <ContextMenuTrigger
               render={
                 <TableRow
-                  className="absolute left-0 w-full hover:bg-transparent"
+                  className="absolute left-0 w-full transition-colors hover:bg-muted/30"
                   style={{
                     top: 0,
                     height: virtualRow.size,
@@ -305,10 +315,15 @@ export function TrackerGrid({
     selectionAnchors(cellSelection);
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={onAddRow}>
-          + Add row
+          <HugeiconsIcon
+            icon={Add01Icon}
+            strokeWidth={2}
+            data-icon="inline-start"
+          />
+          Add row
         </Button>
         {selected ? (
           <Button
@@ -316,16 +331,24 @@ export function TrackerGrid({
             size="sm"
             onClick={() => onDeleteRow(selected.anchorRowId)}
           >
+            <HugeiconsIcon
+              icon={Delete02Icon}
+              strokeWidth={2}
+              data-icon="inline-start"
+            />
             Delete row
           </Button>
         ) : null}
       </div>
-      <div ref={scrollRef} className="h-[60vh] overflow-auto rounded-md border">
+      <div
+        ref={scrollRef}
+        className="h-[60vh] overflow-auto rounded-xl border bg-card shadow-sm"
+      >
         <Table
           className="table-fixed"
           style={{ width: totalColumnWidth(columns) }}
         >
-          <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header, index) => (
@@ -333,7 +356,7 @@ export function TrackerGrid({
                     key={header.id}
                     scope="col"
                     style={{ width: headerWidth(columns[index]) }}
-                    className="truncate border-b px-2 text-left text-xs font-medium"
+                    className="truncate border-b px-2 text-left text-xs font-medium text-muted-foreground"
                   >
                     {String(header.column.columnDef.header)}
                   </TableHead>
@@ -360,8 +383,7 @@ export function TrackerGrid({
       </div>
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Empty tracker. Add a row to start, or paste a listing once the &quot;+
-          New application&quot; flow lands.
+          No rows — add one above.
         </p>
       ) : null}
     </div>

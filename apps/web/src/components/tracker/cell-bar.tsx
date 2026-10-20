@@ -31,9 +31,13 @@ export function CellBar({ column, columnIndex, row, rowIndex }: CellBarProps) {
     : '—';
   const value = selected ? row.cells[column.key] : undefined;
   return (
-    <div className="flex items-center gap-2 border px-2 py-1 text-sm">
-      <span className="w-10 shrink-0 text-muted-foreground">{address}</span>
-      <span className="truncate">{cellText(value)}</span>
+    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border bg-card px-2 py-1 text-sm shadow-xs">
+      <span className="w-9 shrink-0 rounded bg-muted px-1 text-center font-mono text-xs text-muted-foreground">
+        {address}
+      </span>
+      <span className="truncate text-muted-foreground">
+        {cellText(value) || 'Select a cell'}
+      </span>
     </div>
   );
 }

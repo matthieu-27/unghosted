@@ -72,6 +72,14 @@
   --grid-selection: color-mix(in oklab, var(--secondary) 14%, transparent);
   --grid-selection-strong: var(--secondary);
   --grid-selection-strong-foreground: var(--secondary-foreground);
+
+  /*
+   * Summary chart bars: the palette's chart tokens are pastels meant for
+   * lines on white, too faint as 14px bars. This mixes the sky secondary
+   * toward the theme ink just enough to read as a solid bar — and adapts
+   * in dark mode, where foreground is light.
+   */
+  --summary-bar: color-mix(in oklab, var(--secondary) 68%, var(--foreground));
 }
 
 .dark {

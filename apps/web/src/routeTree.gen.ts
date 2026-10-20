@@ -14,6 +14,7 @@ import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthedProjectsIndexRouteImport } from './routes/_authed.projects.index'
+import { Route as AuthedProjectsProjectIdRouteImport } from './routes/_authed.projects.$projectId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthedProjectsProjectIdContactsRouteImport } from './routes/_authed.projects.$projectId.contacts'
 import { Route as AuthedProjectsProjectIdDocumentsRouteImport } from './routes/_authed.projects.$projectId.documents'
@@ -44,6 +45,11 @@ const AuthedProjectsIndexRoute = AuthedProjectsIndexRouteImport.update({
   path: '/projects/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedProjectsProjectIdRoute = AuthedProjectsProjectIdRouteImport.update({
+  id: '/projects/$projectId',
+  path: '/projects/$projectId',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -51,33 +57,34 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 const AuthedProjectsProjectIdContactsRoute =
   AuthedProjectsProjectIdContactsRouteImport.update({
-    id: '/projects/$projectId/contacts',
-    path: '/projects/$projectId/contacts',
-    getParentRoute: () => AuthedRoute,
+    id: '/contacts',
+    path: '/contacts',
+    getParentRoute: () => AuthedProjectsProjectIdRoute,
   } as any)
 const AuthedProjectsProjectIdDocumentsRoute =
   AuthedProjectsProjectIdDocumentsRouteImport.update({
-    id: '/projects/$projectId/documents',
-    path: '/projects/$projectId/documents',
-    getParentRoute: () => AuthedRoute,
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => AuthedProjectsProjectIdRoute,
   } as any)
 const AuthedProjectsProjectIdMailRoute =
   AuthedProjectsProjectIdMailRouteImport.update({
-    id: '/projects/$projectId/mail',
-    path: '/projects/$projectId/mail',
-    getParentRoute: () => AuthedRoute,
+    id: '/mail',
+    path: '/mail',
+    getParentRoute: () => AuthedProjectsProjectIdRoute,
   } as any)
 const AuthedProjectsProjectIdTrackerRoute =
   AuthedProjectsProjectIdTrackerRouteImport.update({
-    id: '/projects/$projectId/tracker',
-    path: '/projects/$projectId/tracker',
-    getParentRoute: () => AuthedRoute,
+    id: '/tracker',
+    path: '/tracker',
+    getParentRoute: () => AuthedProjectsProjectIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/projects/$projectId': typeof AuthedProjectsProjectIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/projects/': typeof AuthedProjectsIndexRoute
   '/projects/$projectId/contacts': typeof AuthedProjectsProjectIdContactsRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/projects/$projectId': typeof AuthedProjectsProjectIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/projects': typeof AuthedProjectsIndexRoute
   '/projects/$projectId/contacts': typeof AuthedProjectsProjectIdContactsRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_authed/projects/$projectId': typeof AuthedProjectsProjectIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_authed/projects/': typeof AuthedProjectsIndexRoute
   '/_authed/projects/$projectId/contacts': typeof AuthedProjectsProjectIdContactsRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/projects/$projectId'
     | '/api/auth/$'
     | '/projects/'
     | '/projects/$projectId/contacts'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
+    | '/projects/$projectId'
     | '/api/auth/$'
     | '/projects'
     | '/projects/$projectId/contacts'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/login'
     | '/signup'
+    | '/_authed/projects/$projectId'
     | '/api/auth/$'
     | '/_authed/projects/'
     | '/_authed/projects/$projectId/contacts'
@@ -191,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedProjectsIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/projects/$projectId': {
+      id: '/_authed/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof AuthedProjectsProjectIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -200,49 +219,64 @@ declare module '@tanstack/react-router' {
     }
     '/_authed/projects/$projectId/contacts': {
       id: '/_authed/projects/$projectId/contacts'
-      path: '/projects/$projectId/contacts'
+      path: '/contacts'
       fullPath: '/projects/$projectId/contacts'
       preLoaderRoute: typeof AuthedProjectsProjectIdContactsRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedProjectsProjectIdRoute
     }
     '/_authed/projects/$projectId/documents': {
       id: '/_authed/projects/$projectId/documents'
-      path: '/projects/$projectId/documents'
+      path: '/documents'
       fullPath: '/projects/$projectId/documents'
       preLoaderRoute: typeof AuthedProjectsProjectIdDocumentsRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedProjectsProjectIdRoute
     }
     '/_authed/projects/$projectId/mail': {
       id: '/_authed/projects/$projectId/mail'
-      path: '/projects/$projectId/mail'
+      path: '/mail'
       fullPath: '/projects/$projectId/mail'
       preLoaderRoute: typeof AuthedProjectsProjectIdMailRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedProjectsProjectIdRoute
     }
     '/_authed/projects/$projectId/tracker': {
       id: '/_authed/projects/$projectId/tracker'
-      path: '/projects/$projectId/tracker'
+      path: '/tracker'
       fullPath: '/projects/$projectId/tracker'
       preLoaderRoute: typeof AuthedProjectsProjectIdTrackerRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedProjectsProjectIdRoute
     }
   }
 }
 
-interface AuthedRouteChildren {
-  AuthedProjectsIndexRoute: typeof AuthedProjectsIndexRoute
+interface AuthedProjectsProjectIdRouteChildren {
   AuthedProjectsProjectIdContactsRoute: typeof AuthedProjectsProjectIdContactsRoute
   AuthedProjectsProjectIdDocumentsRoute: typeof AuthedProjectsProjectIdDocumentsRoute
   AuthedProjectsProjectIdMailRoute: typeof AuthedProjectsProjectIdMailRoute
   AuthedProjectsProjectIdTrackerRoute: typeof AuthedProjectsProjectIdTrackerRoute
 }
 
+const AuthedProjectsProjectIdRouteChildren: AuthedProjectsProjectIdRouteChildren =
+  {
+    AuthedProjectsProjectIdContactsRoute: AuthedProjectsProjectIdContactsRoute,
+    AuthedProjectsProjectIdDocumentsRoute:
+      AuthedProjectsProjectIdDocumentsRoute,
+    AuthedProjectsProjectIdMailRoute: AuthedProjectsProjectIdMailRoute,
+    AuthedProjectsProjectIdTrackerRoute: AuthedProjectsProjectIdTrackerRoute,
+  }
+
+const AuthedProjectsProjectIdRouteWithChildren =
+  AuthedProjectsProjectIdRoute._addFileChildren(
+    AuthedProjectsProjectIdRouteChildren,
+  )
+
+interface AuthedRouteChildren {
+  AuthedProjectsProjectIdRoute: typeof AuthedProjectsProjectIdRouteWithChildren
+  AuthedProjectsIndexRoute: typeof AuthedProjectsIndexRoute
+}
+
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedProjectsProjectIdRoute: AuthedProjectsProjectIdRouteWithChildren,
   AuthedProjectsIndexRoute: AuthedProjectsIndexRoute,
-  AuthedProjectsProjectIdContactsRoute: AuthedProjectsProjectIdContactsRoute,
-  AuthedProjectsProjectIdDocumentsRoute: AuthedProjectsProjectIdDocumentsRoute,
-  AuthedProjectsProjectIdMailRoute: AuthedProjectsProjectIdMailRoute,
-  AuthedProjectsProjectIdTrackerRoute: AuthedProjectsProjectIdTrackerRoute,
 }
 
 const AuthedRouteWithChildren =
