@@ -5,11 +5,24 @@
  */
 
 import { OptionSelect } from '@/components/tracker/option-select';
+import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import type { ColumnDefinition, TrackerRow } from '@/lib/tracker-types';
+
+const DATE_FORMAT = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+/** ISO dates render human; the cell keeps storing the ISO string. */
+function formatDate(value: string): string {
+  const date = new Date(value.length === 10 ? `${value}T00:00:00` : value);
+  return Number.isNaN(date.getTime()) ? value : DATE_FORMAT.format(date);
+}
 
 export function CellDisplay({
   column,
@@ -38,7 +51,37 @@ export function CellDisplay({
   }
   if (column.type === 'select') {
     const option = column.options?.find((o) => o.key === value);
-    return <span>{option?.label ?? String(value)}</span>;
+    return (
+      <Badge variant="outline" className="gap-1.5 rounded-full font-medium">
+        {option?.color ? (
+          <span
+            aria-hidden="true"
+            className="size-1.5 shrink-0 rounded-full"
+            style={{ backgroundColor: option.color }}
+          />
+        ) : null}
+        {option?.label ?? String(value)}
+      </Badge>
+    );
+  }
+  if (column.type === 'date' && typeof value === 'string') {
+    return <span className="text-muted-foreground">{formatDate(value)}</span>;
+  }
+  if (column.type === 'currency') {
+    return (
+      <span className="tabular-nums">
+        {new Intl.NumberFormat('en-GB', {
+          style: 'currency',
+          currency: column.currency ?? 'EUR',
+        }).format(Number(value))}
+      </span>
+    );
+  }
+  if (column.type === 'percent') {
+    return <span className="tabular-nums">{`${value}%`}</span>;
+  }
+  if (column.type === 'number') {
+    return <span className="tabular-nums">{String(value)}</span>;
   }
   return <span>{String(value)}</span>;
 }
